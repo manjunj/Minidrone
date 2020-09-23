@@ -1,0 +1,21 @@
+function redMap = redBlockIdentifier(R)
+    redMap = zeros(12,16);
+    for i = 1:12
+        for j = 1:16
+            for m = 1:10
+                for n = 1:10
+                    redMap(13-i,j) = redMap(13-i,j) + double(R(10*(i-1)+m,10*(j-1)+n));
+                end
+            end
+        end
+    end
+    for i = 1:12
+        for j = 1:16
+            if (redMap(i,j)>255*70)
+                redMap(i,j) = 1;
+            else
+                redMap(i,j) = 0;
+            end
+        end
+    end
+end 
