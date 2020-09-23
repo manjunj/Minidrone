@@ -139,11 +139,11 @@ function [x,y,updatedArriveMap]= movement(currentx,currenty,arriveMap,redMap)
      
     %update blocks between current block to destination block as arrived
     if (currentxblock+1==xblock)||(currentxblock-1==xblock)
-        for j = -1:1
+        for j = -3:3
              updatedArriveMap(currentxblock,currentyblock+j)=1;
         end
     elseif (currentyblock+1==yblock)||(currentyblock-1==yblock)
-        for i = -1:1
+        for i = -3:3
              updatedArriveMap(currentxblock+i,currentyblock)=1;
         end
     end
