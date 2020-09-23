@@ -4,9 +4,7 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
     offset = 100;
     currentxblock = round(currentx*14)+offset; %block coordinate of currentx
     currentyblock = round(currenty*14)+offset; %block coordinate of currenty
-    redMap
-    targetx
-    targety
+
     % if arrive map not initialized, create one, 
     % else it is equal to previous arrive map
     if length(arriveMap) == 1
@@ -60,16 +58,14 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
                     testx = currentx + step*xblockdiff; 
                     testy = currenty + step*yblockdiff;
                     flyToDest = 1;
-                    i
-                    j
+
                     %increment the testing point until close to test block
                     while (((xblock-100)/14-testx) > 0.005)&& (((yblock-100)/14-testy) > 0.005)
                         testxblock = round(testx*14)+offset;
                         testyblock = round(testy*14)+offset;
                         currentxblock;
                         currentyblock;
-                        (xblock-100)/14-testx
-                        (yblock-100)/14-testy
+
                         %this means a block on the route to dest is not red, 
                         %so the drone will not go there
                         if redMap(testxblock-currentxblock+6,testyblock-currentyblock+8) == 0
@@ -88,8 +84,6 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
                             if ((testxblock-currentxblock)^2+(testyblock-currentyblock)^2)>dist
                                 xdestblock = testxblock;
                                 ydestblock = testyblock;
-                                xdestblock
-                                ydestblock
                                 dist = (testxblock-currentxblock)^2+(testyblock-currentyblock)^2;
                             end
                         end
