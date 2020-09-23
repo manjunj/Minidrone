@@ -8,14 +8,13 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
     desty = currentyblock;
     targetx
     targety
-
+    redMap
     % if arrive map not initialized, create one, 
     % else it is equal to previous arrive map
     if length(arriveMap) == 1
         updatedArriveMap = zeros(2*offset,2*offset);
     else  
         updatedArriveMap = arriveMap;
-        arriveMap(131,99)
     end
     
     if (abs(currentxblock-offset)<=1)&&(abs(currentyblock-offset)<=1)
@@ -45,10 +44,8 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
         yblock = round(y*14)+offset;
         destx = targetx;
         desty = targety;
-        fprintf("!")
     % if target is reached, find a new target
     else
-        redMap
         xdestblock = 2*offset+1;
         ydestblock = 2*offset+1; 
         dist = 0;
@@ -62,35 +59,43 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
                     xblock
                     yblock
                     step = 0.01;
-                    xblockdiff = xblock-currentxblock;
-                    yblockdiff = yblock-currentyblock;
-                    testx = currentx + step*xblockdiff; 
-                    testy = currenty + step*yblockdiff;
+                    xblockdiff = xblock-currentxblock
+                    yblockdiff = yblock-currentyblock
+                    testx = currentx + step*xblockdiff 
+                    testy = currenty + step*yblockdiff
                     flyToDest = 1;
-                    testxblock = currentxblock;testyblock = currentyblock;
+                    testxblock = currentxblock;
+                    testyblock = currentyblock;
 
                     %increment the testing point until close to test block
                     while (abs((xblock-100)/14-testx) > 0.04)|| (abs((yblock-100)/14-testy) > 0.04)
-                        xblock
-                        yblock
-                        (xblock-100)/14-testx
-                        (yblock-100)/14-testy
                         testxblock = round(testx*14)+offset
                         testyblock = round(testy*14)+offset
-                        %this means a block on the route to dest is not red, 
-                        %so the drone will not go there
+                        (xblock-100)/14-testx
+                        (yblock-100)/14-testy
+                        a = testxblock-currentxblock+6;
+                        b = testyblock-currentyblock+8;
                         
-                        if ((testxblock-currentxblock+6)>0)&&((testxblock-currentxblock+6)<=12)...
-                            && ((testyblock-currentyblock+8)>0)&&((testyblock-currentyblock+8)<=16)
-
-                            if redMap(testxblock-currentxblock+6,testyblock-currentyblock+8) == 0
-                                flyToDest = 0;
-                                break
-                            end
-                            
-                        elseif xblockdiff == 0 && yblockdiff==0
+                        if xblockdiff == 0 && yblockdiff==0
                             flyToDest = 0;
                             break
+                        elseif a>12
+                            flyToDest = 0;
+                            break
+                        elseif a<1
+                            flyToDest = 0;
+                            break
+                        elseif b<1
+                            flyToDest = 0;
+                            break
+                        elseif b>16
+                            flyToDest = 0;
+                            break
+                        %this means a block on the route to dest is not red, 
+                        %so the drone will not go there
+                        elseif redMap(a,b) == 0
+                            flyToDest = 0;
+                             break
                         else
                             testx = testx +step*xblockdiff; 
                             testy = testy +step*yblockdiff;                   
