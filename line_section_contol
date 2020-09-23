@@ -1,0 +1,150 @@
+function [x,y,updatedArriveMap]= movement(currentx,currenty,arriveMap,redMap)
+    x = 0; y = 0;%intiailize destination coordinate in meters
+    xblock = 0;yblock = 0;%block coordinate of destination x,y
+    offset = 100;
+    potentialdest = (2*offset+1)*ones(1,8);
+    currentxblock = round(currentx*14)+offset; %block coordinate of currentx
+    currentyblock = round(currenty*14)+offset; %block coordinate of currenty
+    % if arrive map not initialized, create one, 
+    % else it is equal to previous arrive map
+    if length(arriveMap) == 1
+        updatedArriveMap = zeros(2*offset,2*offset);
+    else
+        updatedArriveMap = arriveMap;
+    end
+        
+    % find the most top and bottom red block which has not been arrived in our vision
+    for i = 12:-1:1
+        for j = 1:16
+            %convert to global block coordinate
+            xblock = currentxblock+i-6;
+            yblock = currentyblock+j-8;
+            %check whether top block is red
+            if (redMap(i,j)==1&&potentialdest(1)==(2*offset+1)&&xblock>currentxblock)
+                %check if it has been arrived, 
+                %if not arrived,update in potentialdest
+                if (arriveMap(xblock,yblock)==0)
+                    potentialdest(1) = xblock;
+                    potentialdest(2) = yblock;
+                end
+            %check whether bottom block is red
+            elseif (redMap(i,j)==1&&(xblock<currentxblock))
+                %check if it has been arrived
+                %if not arrived,update in potentialdest
+                if (arriveMap(xblock,yblock)==0)
+                    potentialdest(3) = xblock;
+                    potentialdest(4) = yblock;
+                end
+            end
+        end
+    end
+    
+    % find the most left and right red block in our vision
+    for j = 1:16
+        for i = 1:12
+            %convert to global block coordinate
+            xblock = currentxblock+i-6;
+            yblock = currentyblock+j-8;
+            %check whether left block is red
+            if (redMap(i,j)==1&&potentialdest(5)==(2*offset+1)&&yblock<currentyblock) 
+                %check if it has been arrived, 
+                %if not arrived,update in potentialdest
+                if (arriveMap(xblock,yblock)==0)
+                    potentialdest(5) = xblock;
+                    potentialdest(6) = yblock;
+                end
+            %check whether right block is red
+            elseif (redMap(i,j)==1&&yblock>currentyblock)
+                %check if it has been arrived
+                %if not arrived,update in potentialdest
+                if (arriveMap(xblock,yblock)==0)
+                    potentialdest(7) = xblock;
+                    potentialdest(8) = yblock;
+                end
+            end
+        end
+    end
+    
+    dest = zeros(1,8); %initialize destination array
+    count = 0;
+    % update destination array, discard empty destination and 
+    % left right destination whose y is too close to current y and
+    % top bottom destinatino whose x is too close to current x
+    for i = 1:length(potentialdest)
+        if potentialdest(i)~=(2*offset+1)
+            if (i == 1||i == 3 )&& (abs(potentialdest(i)-currentxblock)<=2)
+            elseif(i == 2|| i == 4)&& (abs(potentialdest(i-1)-currentxblock)<=2)
+            elseif(i == 5|| i == 7)&& (abs(potentialdest(i+1)-currentyblock)<=2)
+            elseif(i == 6|| i == 8)&& (abs(potentialdest(i)-currentyblock)<=2)
+            else
+                count = count+1;
+                dest(count) = potentialdest(i);
+            end
+        end
+    end
+    dest
+    % if there is no destination, stay in current position
+    if (count == 0)
+        xblock = currentxblock;
+        yblock = currentyblock;
+        x = currentx;
+        y = currenty;
+    % if there is one destination, go there
+    elseif (count == 2)
+        step = 0.0002;
+        xblockdiff = dest(1)-currentxblock;
+        yblockdiff = dest(2)-currentyblock;
+        x = currentx+step*xblockdiff;
+        y = currenty+step*yblockdiff;
+        xblock = round(x*14)+offset;
+        yblock = round(y*14)+offset;
+    % if there is two or three destinations, find the destination with red midpoint
+    else
+        step = 0.01;
+        %check if the drone will leave the red line 
+        %it moves (a distance) towards (dest(1),dest(2))
+        for i=0:(count/2-1)
+            xblockdiff = dest(2*i+1)-currentxblock; yblockdiff = dest(2*i+2)-currentyblock;
+            testx = currentx + step*xblockdiff; testy = currenty + step*yblockdiff;
+            flyToDest = 1;
+            %increment the testing point until it is close to dest, 
+            %may need to change thethreshold(0.0001)
+            while (((dest(2*i+1)-100)/14-testx) > 0.005 && ((dest(2*i+2)-100)/14-testy > 0.005) ) 
+                
+                testxblock = round(testx*14)+offset; testyblock = round(testy*14)+offset;
+ 
+                %this means a block on the route to dest is not red, 
+                %so the drone will not follow the red line
+                if redMap(testxblock-currentxblock+6,testyblock-currentyblock+8) == 0
+                    flyToDest = 0;
+                    break
+                else
+                    testx = testx +step*xblockdiff; testy = testy + step*yblockdiff;
+                end
+ 
+            end
+            
+ 
+            %update the next move if we can fly to dest1
+            if flyToDest==1
+                xblockdiff = dest(2*i+1)-currentxblock; yblockdiff = dest(2*i+2)-currentyblock;
+                x = currentx+0.0001*xblockdiff; y = currenty+0.0001*yblockdiff;
+                xblock = round(x*14)+offset; yblock = round(y*14)+offset;
+            else
+                
+            end
+ 
+        end
+    end
+     
+    %update blocks between current block to destination block as arrived
+    if (currentxblock+1==xblock)||(currentxblock-1==xblock)
+        for j = -1:1
+             updatedArriveMap(currentxblock,currentyblock+j)=1;
+        end
+    elseif (currentyblock+1==yblock)||(currentyblock-1==yblock)
+        for i = -1:1
+             updatedArriveMap(currentxblock+i,currentyblock)=1;
+        end
+    end
+end
