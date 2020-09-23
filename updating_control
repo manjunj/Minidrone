@@ -7,17 +7,20 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
     redMap
     targetx
     targety
-    length(arriveMap)
     % if arrive map not initialized, create one, 
     % else it is equal to previous arrive map
     if length(arriveMap) == 1
-        count2 =0;
+        updatedArriveMap = zeros(2*offset,2*offset);
+    else  
+        updatedArriveMap = arriveMap;
+    end
+    
+    if (abs(currentxblock-offset)<=1)&&(abs(currentyblock-offset)<=1)
         for i = 1:12
             count = 0;
             for j = 1:16
                 if redMap(i,j)==1
                     count = count+1;
-                    count2 = count2 + 1;
                 end
             end
             if count>=4
@@ -25,19 +28,12 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
                 return
             end
         end
-        if count2 ~= 0
-            updatedArriveMap = zeros(2*offset,2*offset);
-            return
-        else
-            destx = offset;desty = offset;
-            return
-        end
-    else  
-        updatedArriveMap = arriveMap;
-    end
+    end      
     
+    % if has not reached target, or target is just initialized
     if (currentxblock~=targetx||currentyblock~=targety)&&(targetx~=0&&targety~=0)
-        step = 0.0002;
+        step = 0.0005;
+        % move one step towards the target
         xblockdiff = targetx-currentxblock; 
         yblockdiff = targety-currentyblock;
         x = currentx+step*xblockdiff;
@@ -46,6 +42,7 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
         yblock = round(y*14)+offset;
         destx = targetx;
         desty = targety;
+    % if target is reached, find a new target
     else
         xdestblock = 2*offset+1;
         ydestblock = 2*offset+1; 
@@ -55,20 +52,30 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
                 %convert to global block coordinate
                 xblock = currentxblock+i-6;
                 yblock = currentyblock+j-8;
-                %check whether top block is red
+                %check whether top block is red and reachable
                 if (redMap(i,j)==1&&arriveMap(xblock,yblock)==0)
-                    %check if it is reachable
                     step = 0.01;
-                    xblockdiff = xblock-currentxblock; yblockdiff = yblock-currentyblock;
-                    testx = currentx + step*xblockdiff; testy = currenty + step*yblockdiff;
+                    xblockdiff = xblock-currentxblock;
+                    yblockdiff = yblock-currentyblock;
+                    testx = currentx + step*xblockdiff; 
+                    testy = currenty + step*yblockdiff;
                     flyToDest = 1;
+                    i
+                    j
                     %increment the testing point until close to test block
                     while (((xblock-100)/14-testx) > 0.005)&& (((yblock-100)/14-testy) > 0.005)
-                        testxblock = round(testx*14)+offset; 
+                        testxblock = round(testx*14)+offset;
                         testyblock = round(testy*14)+offset;
+                        currentxblock;
+                        currentyblock;
+                        (xblock-100)/14-testx
+                        (yblock-100)/14-testy
                         %this means a block on the route to dest is not red, 
                         %so the drone will not go there
                         if redMap(testxblock-currentxblock+6,testyblock-currentyblock+8) == 0
+                            flyToDest = 0;
+                            break
+                        elseif xblockdiff == 0 && yblockdiff==0
                             flyToDest = 0;
                             break
                         else
@@ -76,11 +83,13 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
                             testy = testy +step*yblockdiff;                   
                         end
 
-                        %update the next move if we can fly to dest1
+                        %find the farthest destination
                         if flyToDest == 1
                             if ((testxblock-currentxblock)^2+(testyblock-currentyblock)^2)>dist
                                 xdestblock = testxblock;
                                 ydestblock = testyblock;
+                                xdestblock
+                                ydestblock
                                 dist = (testxblock-currentxblock)^2+(testyblock-currentyblock)^2;
                             end
                         end
@@ -89,8 +98,9 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
             end
         end
 
+        % if dest is reachable, move one step to dest
         if (xdestblock~=2*offset+1)
-            step = 0.0001;
+            step = 0.0002;
             xblockdiff = xdestblock-currentxblock; 
             yblockdiff = ydestblock-currentyblock;
             destx = xdestblock;
@@ -99,6 +109,7 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
             y = currenty+step*yblockdiff;
             xblock = round(x*14)+offset; 
             yblock = round(y*14)+offset;
+        % if dest is not reachable, stay in current position
         else
             xblock=currentxblock;
             yblock=currentyblock;
