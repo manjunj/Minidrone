@@ -2,8 +2,8 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
     x = 0; y = 0;%intiailize destination coordinate in meters
     xblock = 0;yblock = 0;%block coordinate of destination x,y
     offset = 100;
-    currentxblock = round(currentx*14)+offset; %block coordinate of currentx
-    currentyblock = round(currenty*14)+offset; %block coordinate of currenty
+    currentxblock = round(currentx*14)+offset %block coordinate of currentx
+    currentyblock = round(currenty*14)+offset %block coordinate of currenty
 
     % if arrive map not initialized, create one, 
     % else it is equal to previous arrive map
@@ -11,6 +11,7 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
         updatedArriveMap = zeros(2*offset,2*offset);
     else  
         updatedArriveMap = arriveMap;
+        arriveMap(131,99)
     end
     
     if (abs(currentxblock-offset)<=1)&&(abs(currentyblock-offset)<=1)
@@ -58,14 +59,13 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
                     testx = currentx + step*xblockdiff; 
                     testy = currenty + step*yblockdiff;
                     flyToDest = 1;
+                    testxblock = 0;testyblock = 0;
 
                     %increment the testing point until close to test block
-                    while (((xblock-100)/14-testx) > 0.005)&& (((yblock-100)/14-testy) > 0.005)
+                    while (abs((xblock-100)/14-testx) > 0.04)&& (abs((yblock-100)/14-testy) > 0.04)
                         testxblock = round(testx*14)+offset;
                         testyblock = round(testy*14)+offset;
-                        currentxblock;
-                        currentyblock;
-
+                        redMap(testxblock-currentxblock+6,testyblock-currentyblock+8)
                         %this means a block on the route to dest is not red, 
                         %so the drone will not go there
                         if redMap(testxblock-currentxblock+6,testyblock-currentyblock+8) == 0
@@ -78,14 +78,15 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
                             testx = testx +step*xblockdiff; 
                             testy = testy +step*yblockdiff;                   
                         end
+                    end
 
-                        %find the farthest destination
-                        if flyToDest == 1
-                            if ((testxblock-currentxblock)^2+(testyblock-currentyblock)^2)>dist
-                                xdestblock = testxblock;
-                                ydestblock = testyblock;
-                                dist = (testxblock-currentxblock)^2+(testyblock-currentyblock)^2;
-                            end
+                    %find the farthest destination
+                    %find the farthest destination
+                    if flyToDest == 1
+                        if ((xblock-currentxblock)^2+(yblock-currentyblock)^2)>dist
+                            xdestblock = testxblock;
+                            ydestblock = testyblock;
+                            dist = (xblock-currentxblock)^2+(yblock-currentyblock)^2;
                         end
                     end
                 end
@@ -101,8 +102,8 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
             desty = ydestblock;
             x = currentx+step*xblockdiff;
             y = currenty+step*yblockdiff;
-            xblock = round(x*14)+offset; 
-            yblock = round(y*14)+offset;
+            xblock = round(x*14)+offset
+            yblock = round(y*14)+offset
         % if dest is not reachable, stay in current position
         else
             xblock=currentxblock;
@@ -115,13 +116,34 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
     end
      
     %update blocks between current block to destination block as arrived
-    if (currentxblock+1==xblock)||(currentxblock-1==xblock)
+    if (currentxblock+1==xblock)
         for j = -1:1
              updatedArriveMap(currentxblock,currentyblock+j)=1;
+             updatedArriveMap(currentxblock-1,currentyblock+j)=1;
+             updatedArriveMap(currentxblock-2,currentyblock+j)=1;
+             updatedArriveMap(currentxblock-3,currentyblock+j)=1;
         end
-    elseif (currentyblock+1==yblock)||(currentyblock-1==yblock)
+    elseif (currentxblock-1==xblock)
+        for j = -1:1
+             updatedArriveMap(currentxblock,currentyblock+j)=1;
+             updatedArriveMap(currentxblock+1,currentyblock+j)=1;
+             updatedArriveMap(currentxblock+2,currentyblock+j)=1;
+             updatedArriveMap(currentxblock+3,currentyblock+j)=1;
+        end
+        
+    elseif (currentyblock+1==yblock)
         for i = -1:1
              updatedArriveMap(currentxblock+i,currentyblock)=1;
+             updatedArriveMap(currentxblock+i,currentyblock-1)=1;
+             updatedArriveMap(currentxblock+i,currentyblock-2)=1;
+             updatedArriveMap(currentxblock+i,currentyblock-3)=1;
+        end
+    elseif (currentyblock-1==yblock)
+        for i = -1:1
+            updatedArriveMap(currentxblock+i,currentyblock)=1;
+            updatedArriveMap(currentxblock+i,currentyblock+1)=1;
+            updatedArriveMap(currentxblock+i,currentyblock+2)=1;
+            updatedArriveMap(currentxblock+i,currentyblock+3)=1;
         end
     end
 end
