@@ -107,6 +107,10 @@ function [x,y,updatedArriveMap,destx,desty]= movement(currentx,currenty,arriveMa
                         if ((xblock-currentxblock)^2+(yblock-currentyblock)^2)>dist
                             xdestblock = testxblock;
                             ydestblock = testyblock;
+                            if (xdestblock == currentxblock)&&(ydestblock ==currentyblock)
+                                xdestblock = xblock;
+                                ydestblock = yblock;
+                            end
                             dist = (xblock-currentxblock)^2+(yblock-currentyblock)^2;
                         end
                     end
