@@ -1,17 +1,25 @@
-function redMap = redBlockIdentifier(R)
+% redBlockIdentifier divide 120*160 RGB Matrix into 12*16 blocks, 
+% each block contains 10*10piexls
+% It returns 12*16 matrix identifying whether this block is seen as red (1)
+% or not red(0)
+function redMap = redBlockIdentifier(R,G,B)
     redMap = zeros(12,16);
     for i = 1:12
         for j = 1:16
             for m = 1:10
                 for n = 1:10
-                    redMap(13-i,j) = redMap(13-i,j) + double(R(10*(i-1)+m,10*(j-1)+n));
+                    %13-i is used as matlab matrix starts from upper left
+                    %corner while our matrix needs to start from bottom
+                    %left corner, to align with the simulation coodinates
+                    redMap(13-i,j) = redMap(13-i,j) + double(R(10*(i-1)+m,10*(j-1)+n))...
+                        -0.5*double(G(10*(i-1)+m,10*(j-1)+n))-0.5*double(B(10*(i-1)+m,10*(j-1)+n));
                 end
             end
         end
     end
     for i = 1:12
         for j = 1:16
-            if (redMap(i,j)>255*70)
+            if (redMap(i,j)>255*60)
                 redMap(i,j) = 1;
             else
                 redMap(i,j) = 0;
